@@ -1,39 +1,43 @@
-// Twin Paradox Timer
-// Integrates acceleration (no gravity if available) to velocity,
-// applies drift-to-zero for stillness, limits speed to < c,
-// and updates proper time tau = ∫ dt / gamma.
+// Twin Timer (clean UI)
+// Proper time tau updates via SR time dilation using accelerometer-derived speed.
+// v_eff = c * tanh(v_raw / c) ensures speed < c.
 
 const els = {
   timer: document.getElementById('timer'),
   startStop: document.getElementById('startStop'),
   reset: document.getElementById('reset'),
-  status: document.getElementById('status'),
+  openSettings: document.getElementById('openSettings'),
+  closeSettings: document.getElementById('closeSettings'),
+  closeSettingsFooter: document.getElementById('closeSettingsFooter'),
+  modalBackdrop: document.getElementById('modalBackdrop'),
+  settings: document.getElementById('settings'),
+
   accel: document.getElementById('accel'),
   vraw: document.getElementById('vraw'),
   veff: document.getElementById('veff'),
   gamma: document.getElementById('gamma'),
-  tau: document.getElementById('tau'),
-  gate: document.getElementById('gate'),
+
   cval: document.getElementById('cval'),
-  limiter: document.getElementById('limiter'),
+  tau: document.getElementById('tau'),
 };
 
 let running = false;
 let lastFrameT = null;
 
-// Latest acceleration sample (m/s^2), device coordinates
+// Acceleration (m/s^2)
 let a = { x: 0, y: 0, z: 0 };
-// Current velocity estimate (m/s), device coordinates
+// Velocity (m/s)
 let v = { x: 0, y: 0, z: 0 };
 
 // High-pass filter memory for gravity removal fallback
 const hp = { x: 0, y: 0, z: 0, lastX: null, lastY: null, lastZ: null };
 const HP_ALPHA = 0.98;
 
-// Proper time accumulator (seconds)
-let tau = 0;
+// Proper time (s)
+let tauVal = 0;
 
-// Helper math
+// Constants / settings
+const GATE = 0.05; // quiet gate for tiny accel
 const norm3 = (x, y, z) => Math.hypot(x, y, z);
 const addScaled = (v, a, dt) => ({ x: v.x + a.x * dt, y: v.y + a.y * dt, z: v.z + a.z * dt });
 
@@ -48,53 +52,44 @@ function formatTau(sec) {
 }
 
 // Config getters
-function getTau() {
-  const t = parseFloat(els.tau.value);
-  return Number.isFinite(t) && t > 0 ? t : 3.0;
-}
-function getGate() {
-  const g = parseFloat(els.gate.value);
-  return Number.isFinite(g) && g >= 0 ? g : 0.05;
-}
 function getC() {
   const c = parseFloat(els.cval.value);
   return Number.isFinite(c) && c > 0 ? c : 1.0;
 }
-function limitSpeed(vmag, c, mode) {
-  if (vmag <= 0) return 0;
-  if (mode === 'tanh') {
-    // v_eff = c * tanh(v/c) -> strictly less than c
-    return c * Math.tanh(vmag / c);
-  }
-  // clip to 0.999c
-  return Math.min(vmag, 0.999 * c);
+function getTau() {
+  const t = parseFloat(els.tau.value);
+  return Number.isFinite(t) && t > 0 ? t : 3.0;
+}
+
+// Speed limiting
+function limitSpeed(vmag, c) {
+  return c * Math.tanh(vmag / c); // strictly less than c
 }
 function gammaFromV(vmag, c) {
   const beta2 = (vmag * vmag) / (c * c);
-  if (beta2 >= 1) return 1e12; // safeguard
+  if (beta2 <= 0) return 1;
+  if (beta2 >= 1) return 1e12; // guard
   return 1 / Math.sqrt(1 - beta2);
 }
 
-// Motion sensor setup
+// Sensors
 function startSensors() {
   if (!('DeviceMotionEvent' in window)) {
-    els.status.textContent = 'DeviceMotion not supported on this browser.';
+    // Minimal UI: silently ignore on unsupported browsers
     return false;
   }
-  // Android Chrome usually needs only a user gesture; no explicit permission.
   window.addEventListener('devicemotion', onMotion, { passive: true });
-  els.status.textContent = 'listening to devicemotion…';
   return true;
 }
 
 function onMotion(e) {
-  // Prefer acceleration (without gravity)
-  let ax = e.acceleration && e.acceleration.x != null ? e.acceleration.x : null;
-  let ay = e.acceleration && e.acceleration.y != null ? e.acceleration.y : null;
-  let az = e.acceleration && e.acceleration.z != null ? e.acceleration.z : null;
+  // Prefer acceleration without gravity
+  let ax = e.acceleration?.x ?? null;
+  let ay = e.acceleration?.y ?? null;
+  let az = e.acceleration?.z ?? null;
 
   if (ax == null || ay == null || az == null) {
-    // Fall back to includingGravity with a high-pass filter
+    // Fallback: accelerationIncludingGravity with high-pass
     const gx = e.accelerationIncludingGravity?.x ?? 0;
     const gy = e.accelerationIncludingGravity?.y ?? 0;
     const gz = e.accelerationIncludingGravity?.z ?? 0;
@@ -105,18 +100,15 @@ function onMotion(e) {
     hp.lastX = gx; hp.lastY = gy; hp.lastZ = gz;
 
     ax = hp.x; ay = hp.y; az = hp.z;
-    els.status.textContent = 'using high-pass filter (no gravity-free accel)';
-  } else {
-    els.status.textContent = 'using acceleration (no gravity)';
   }
 
-  // Simple noise gate
-  const G = getGate();
-  if (Math.abs(ax) < G) ax = 0;
-  if (Math.abs(ay) < G) ay = 0;
-  if (Math.abs(az) < G) az = 0;
+  // Noise gate
+  if (Math.abs(ax) < GATE) ax = 0;
+  if (Math.abs(ay) < GATE) ay = 0;
+  if (Math.abs(az) < GATE) az = 0;
 
   a = { x: ax, y: ay, z: az };
+  // Update settings panel live
   els.accel.textContent = `${ax.toFixed(3)}, ${ay.toFixed(3)}, ${az.toFixed(3)}`;
 }
 
@@ -124,32 +116,29 @@ function onMotion(e) {
 function loop(t) {
   if (!running) return;
   if (lastFrameT == null) lastFrameT = t;
-  const dt = Math.max(0, (t - lastFrameT) / 1000); // seconds
+  const dt = Math.max(0, (t - lastFrameT) / 1000);
   lastFrameT = t;
 
   // Integrate acceleration to velocity
   v = addScaled(v, a, dt);
 
-  // Drift-to-zero when near stillness
+  // Drift-to-zero when nearly still
   const amag = norm3(a.x, a.y, a.z);
-  const tauDecay = getTau();
-  if (amag === 0 || amag < getGate() * 1.5) {
-    // Exponential decay: v <- v * exp(-dt/τ)
-    const decay = Math.exp(-dt / tauDecay);
+  if (amag === 0 || amag < GATE * 1.5) {
+    const decay = Math.exp(-dt / getTau());
     v.x *= decay; v.y *= decay; v.z *= decay;
   }
 
   const vmag = norm3(v.x, v.y, v.z);
   const c = getC();
-  const vEff = limitSpeed(vmag, c, els.limiter.value);
+  const vEff = limitSpeed(vmag, c);
   const gamma = gammaFromV(vEff, c);
 
-  // Proper time update: dτ = dt / γ
-  const dTau = dt / gamma;
-  tau += dTau;
+  // Proper time update
+  tauVal += dt / gamma;
 
-  // Update UI
-  els.timer.textContent = formatTau(tau);
+  // UI
+  els.timer.textContent = formatTau(tauVal);
   els.vraw.textContent = vmag.toFixed(3);
   els.veff.textContent = vEff.toFixed(3);
   els.gamma.textContent = gamma.toFixed(6);
@@ -158,11 +147,34 @@ function loop(t) {
 }
 
 // Controls
-els.startStop.addEventListener('click', async () => {
+function openSettings() {
+  els.modalBackdrop.hidden = false;
+  if (typeof els.settings.showModal === 'function') {
+    els.settings.showModal();
+  } else {
+    // Fallback for browsers without <dialog> support
+    els.settings.style.display = 'block';
+  }
+}
+function closeSettings() {
+  els.modalBackdrop.hidden = true;
+  if (typeof els.settings.close === 'function') {
+    els.settings.close();
+  } else {
+    els.settings.style.display = 'none';
+  }
+}
+
+els.openSettings.addEventListener('click', openSettings);
+els.closeSettings.addEventListener('click', closeSettings);
+els.closeSettingsFooter.addEventListener('click', closeSettings);
+els.modalBackdrop.addEventListener('click', closeSettings);
+
+els.startStop.addEventListener('click', () => {
   if (!running) {
-    // Start sensors on user gesture
-    const ok = startSensors();
-    if (!ok) return;
+    if (!startSensors()) {
+      // If sensors are unavailable, still run the timer (non-relativistic)
+    }
     running = true;
     lastFrameT = null;
     requestAnimationFrame(loop);
@@ -170,13 +182,11 @@ els.startStop.addEventListener('click', async () => {
   } else {
     running = false;
     els.startStop.textContent = 'Start';
-    els.status.textContent = 'paused';
   }
 });
 
 els.reset.addEventListener('click', () => {
-  // Reset timer and speed
-  tau = 0;
+  tauVal = 0;
   v = { x: 0, y: 0, z: 0 };
   a = { x: 0, y: 0, z: 0 };
   hp.x = hp.y = hp.z = 0; hp.lastX = hp.lastY = hp.lastZ = null;
@@ -184,14 +194,12 @@ els.reset.addEventListener('click', () => {
   els.vraw.textContent = '0.00';
   els.veff.textContent = '0.00';
   els.gamma.textContent = '1.000000';
-  els.status.textContent = 'reset';
+  // keep running state unchanged
 });
 
 document.addEventListener('visibilitychange', () => {
-  // Pause when backgrounded to avoid weird timing
   if (document.hidden && running) {
     running = false;
     els.startStop.textContent = 'Start';
-    els.status.textContent = 'paused (backgrounded)';
   }
 });
