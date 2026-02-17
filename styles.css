@@ -16,23 +16,18 @@ html, body {
 }
 
 main {
-  max-width: 720px;
+  max-width: 680px;
   margin: 0 auto;
-  padding: 1rem;
-}
-
-h1 {
-  font-weight: 600;
-  margin: 0.5rem 0 1rem;
+  padding: 1.5rem 1rem;
 }
 
 #timer {
   font-variant-numeric: tabular-nums;
-  font-size: 3.2rem;
+  font-size: 3.4rem;
   text-align: center;
   padding: 1.2rem 0;
   border: 1px solid #223;
-  border-radius: 12px;
+  border-radius: 14px;
   background: rgba(255,255,255,0.05);
 }
 
@@ -40,27 +35,67 @@ h1 {
   display: flex;
   gap: 0.75rem;
   justify-content: center;
-  margin: 1rem 0 1.5rem;
+  margin: 1.2rem 0 0.6rem;
 }
 
 button {
   font-size: 1.1rem;
-  padding: 0.6rem 1.2rem;
+  padding: 0.6rem 1.1rem;
   border-radius: 10px;
   border: 1px solid #334;
   background: #1b2735;
   color: var(--fg);
 }
-
 button:hover { background: #223247; }
+button#openSettings { width: 3rem; padding: 0.6rem; }
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 8;
+}
+
+dialog#settings {
+  border: 1px solid #334;
+  border-radius: 12px;
+  padding: 0;
+  width: min(540px, 92vw);
+  background: #0f1620;
+  color: var(--fg);
+  z-index: 9;
+}
+
+dialog header, dialog footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid #223;
+}
+dialog footer { border-top: 1px solid #223; border-bottom: none; }
+
+dialog h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+dialog header button {
+  background: transparent;
+  border: 1px solid #334;
+  border-radius: 8px;
+  padding: 0.3rem 0.6rem;
+}
 
 .panel {
-  border: 1px solid #223;
-  border-radius: 12px;
   padding: 0.9rem;
-  margin: 0.8rem 0;
+  margin: 0.2rem 0.9rem 0.9rem;
+  border: 1px solid #223;
+  border-radius: 10px;
   background: rgba(255,255,255,0.04);
 }
+
+.panel.compact { margin-top: 0; }
 
 label {
   display: block;
@@ -68,7 +103,7 @@ label {
   color: var(--muted);
 }
 
-input, select {
+input {
   width: 100%;
   margin-top: 0.3rem;
   padding: 0.5rem 0.6rem;
@@ -83,11 +118,12 @@ input, select {
   grid-template-columns: auto 1fr;
   gap: 0.4rem 1rem;
   align-items: center;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
-#status {
-  margin-bottom: 0.6rem;
-  color: var(--accent);
-  min-height: 1.2em;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+.hint {
+  display: block;
+  margin-top: 0.4rem;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
