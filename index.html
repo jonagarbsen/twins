@@ -3,56 +3,56 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Twin Paradox Timer</title>
+  <title>Twin Timer</title>
   <meta http-equiv="Permissions-Policy" content="accelerometer=(self)">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <main>
-    <h1>Twin Paradox Timer</h1>
-
     <div id="timer" aria-live="polite">00:00:00.000</div>
 
     <div class="controls">
       <button id="startStop">Start</button>
       <button id="reset">Reset</button>
+      <button id="openSettings" aria-label="Settings">⚙︎</button>
     </div>
+  </main>
+
+  <!-- Settings modal -->
+  <div id="modalBackdrop" class="backdrop" hidden></div>
+  <dialog id="settings">
+    <header>
+      <h2>Settings</h2>
+      <button id="closeSettings" aria-label="Close">✕</button>
+    </header>
 
     <section class="panel">
-      <h2>Settings</h2>
-      <label>
-        Drift time constant τ (s)
-        <input id="tau" type="number" step="0.1" min="0.1" value="3.0">
-      </label>
-      <label>
-        Accel quiet gate (m/s²)
-        <input id="gate" type="number" step="0.01" min="0" value="0.05">
-      </label>
       <label>
         Speed of light c (m/s)
         <input id="cval" type="number" step="0.1" min="0.1" value="1.00">
       </label>
       <label>
-        Speed limiter
-        <select id="limiter">
-          <option value="tanh" selected>tanh(v/c) (never reaches c)</option>
-          <option value="clip">clip to 0.999c</option>
-        </select>
+        Drift time constant τ (s)
+        <input id="tau" type="number" step="0.1" min="0.1" value="3.0">
       </label>
+      <small class="hint">Drift: velocity decays as v ← v · exp(−Δt/τ) when nearly still.</small>
     </section>
 
-    <section class="panel">
-      <h2>Status</h2>
-      <div id="status">idle</div>
+    <section class="panel compact">
       <div class="grid">
         <div>Accel (m/s²):</div><div id="accel">-</div>
-        <div>Raw speed (m/s):</div><div id="vraw">0.00</div>
-        <div>Limited speed (m/s):</div><div id="veff">0.00</div>
-        <div>γ factor:</div><div id="gamma">1.000000</div>
+        <div>Speed (raw):</div><div id="vraw">0.00</div>
+        <div>Speed (effective):</div><div id="veff">0.00</div>
+        <div>γ:</div><div id="gamma">1.000000</div>
       </div>
+      <small class="hint">Speed is limited: v_eff = c · tanh(v_raw / c), so v_eff < c.</small>
     </section>
-  </main>
+
+    <footer>
+      <button id="closeSettingsFooter">Done</button>
+    </footer>
+  </dialog>
 
   <script src="app.js"></script>
 </body>
