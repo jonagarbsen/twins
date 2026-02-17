@@ -1,0 +1,9 @@
+{
+  "name": "Twin Paradox Timer",
+  "short_name": "TwinTimer",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0b0f14",
+  "theme_color": "#0b0f14",
+  "icons": []
+}
