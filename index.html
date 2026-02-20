@@ -36,7 +36,13 @@
         Drift time constant τ (s)
         <input id="tau" type="number" step="0.1" min="0.1" value="3.0">
       </label>
-      <small class="hint">Drift: velocity decays as $v \leftarrow v\,\exp(-\Delta t/\tau)$ when nearly still.</small>
+      <label>
+        Drift gamma boost k
+        <input id="kboost" type="number" step="0.1" min="0" value="0.5">
+      </label>
+      <small class="hint">
+        Effective drift time is $\tau_{\text{eff}} = \tau / (1 + k\,(\gamma - 1))$.
+      </small>
     </section>
 
     <section class="panel compact">
@@ -45,9 +51,11 @@
         <div>Speed (raw):</div><div id="vraw">0.00</div>
         <div>Speed (effective):</div><div id="veff">0.00</div>
         <div>γ:</div><div id="gamma">1.000000</div>
-        <div>Orientation:</div><div id="oriStatus">waiting…</div>
+        <div>Fusion:</div><div id="oriStatus">waiting…</div>
       </div>
-      <small class="hint">Speed is limited: $v_{\mathrm{eff}} = c \tanh(v_{\mathrm{raw}}/c)$, so $v_{\mathrm{eff}} < c$.</small>
+      <small class="hint">
+        Speed limiter: $v_{\mathrm{eff}} = c \tanh(v_{\mathrm{raw}}/c)$, so $v_{\mathrm{eff}} < c$.
+      </small>
     </section>
 
     <footer>
