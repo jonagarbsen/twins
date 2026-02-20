@@ -75,11 +75,7 @@ dialog header, dialog footer {
 }
 dialog footer { border-top: 1px solid #223; border-bottom: none; }
 
-dialog h2 {
-  margin: 0;
-  font-size: 1.2rem;
-}
-
+dialog h2 { margin: 0; font-size: 1.2rem; }
 dialog header button {
   background: transparent;
   border: 1px solid #334;
@@ -97,12 +93,7 @@ dialog header button {
 
 .panel.compact { margin-top: 0; }
 
-label {
-  display: block;
-  margin: 0.5rem 0;
-  color: var(--muted);
-}
-
+label { display: block; margin: 0.5rem 0; color: var(--muted); }
 input {
   width: 100%;
   margin-top: 0.3rem;
