@@ -30,7 +30,7 @@
     <section class="panel">
       <label>
         Speed of light c (m/s)
-        <input id="cval" type="number" step="0.1" min="0.1" value="5.00">
+        <input id="cval" type="number" step="0.1" min="0.1" value="1.00">
       </label>
       <label>
         Drift time constant τ (s)
@@ -41,7 +41,7 @@
         <input id="kboost" type="number" step="0.1" min="0" value="0.5">
       </label>
       <small class="hint">
-        Effective drift time is $\tau_{\text{eff}} = \tau / (1 + k\,(\gamma - 1))$.
+        Effective drift: $\tau_{\text{eff}} = \tau / (1 + k\,(\gamma - 1))$.
       </small>
     </section>
 
@@ -54,7 +54,7 @@
         <div>Fusion:</div><div id="oriStatus">waiting…</div>
       </div>
       <small class="hint">
-        Speed limiter: $v_{\mathrm{eff}} = c \tanh(v_{\mathrm{raw}}/c)$, so $v_{\mathrm{eff}} < c$.
+        Rotation gating active: when $|\omega|$ is high and $|a|$ is small, we stop integrating and decay $v$.
       </small>
     </section>
 
