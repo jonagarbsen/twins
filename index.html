@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Twin Timer</title>
-  <meta http-equiv="Permissions-Policy" content="accelerometer=(self)">
+  <meta http-equiv="Permissions-Policy" content="accelerometer=(self), gyroscope=(self), magnetometer=(self)">
   <link rel="manifest" href="manifest.json">
   <link rel="stylesheet" href="styles.css">
 </head>
@@ -36,17 +36,18 @@
         Drift time constant τ (s)
         <input id="tau" type="number" step="0.1" min="0.1" value="3.0">
       </label>
-      <small class="hint">Drift: velocity decays as v ← v · exp(−Δt/τ) when nearly still.</small>
+      <small class="hint">Drift: velocity decays as $v \leftarrow v\,\exp(-\Delta t/\tau)$ when nearly still.</small>
     </section>
 
     <section class="panel compact">
       <div class="grid">
-        <div>Accel (m/s²):</div><div id="accel">-</div>
+        <div>Accel world (m/s²):</div><div id="accel">-</div>
         <div>Speed (raw):</div><div id="vraw">0.00</div>
         <div>Speed (effective):</div><div id="veff">0.00</div>
         <div>γ:</div><div id="gamma">1.000000</div>
+        <div>Orientation:</div><div id="oriStatus">waiting…</div>
       </div>
-      <small class="hint">Speed is limited: v_eff = c · tanh(v_raw / c), so v_eff < c.</small>
+      <small class="hint">Speed is limited: $v_{\mathrm{eff}} = c \tanh(v_{\mathrm{raw}}/c)$, so $v_{\mathrm{eff}} < c$.</small>
     </section>
 
     <footer>
