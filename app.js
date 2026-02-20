@@ -41,9 +41,9 @@ function getK() {
 
 // ---- Math & helpers ----
 const G = 9.80665;                 // m/s^2
-const ACC_GATE = 0.05;             // m/s^2, noise gate
-const OMEGA_THRESH = 0.35;         // rad/s, rotation gating threshold
-const GRAV_TAU = 0.7;              // s, gravity LPF time-constant in world frame
+const ACC_GATE = 0.08;             // m/s^2, noise gate
+const OMEGA_THRESH = 0.55;         // rad/s, rotation gating threshold
+const GRAV_TAU = 1;              // s, gravity LPF time-constant in world frame
 
 const norm3 = (x, y, z) => Math.hypot(x, y, z);
 const addScaled = (v, a, dt) => ({ x: v.x + a.x * dt, y: v.y + a.y * dt, z: v.z + a.z * dt });
